@@ -1,0 +1,6 @@
+FROM python:3.12-slim
+RUN pip install --no-cache-dir pytest pytest-cov coverage
+COPY coverage_worker.py /opt/coverage_worker.py
+ENV PYTHONDONTWRITEBYTECODE=1
+USER 65534:65534
+ENTRYPOINT ["python", "/opt/coverage_worker.py"]

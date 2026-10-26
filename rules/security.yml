@@ -1,0 +1,15 @@
+rules:
+  - id: python-dynamic-eval
+    languages: [python]
+    severity: WARNING
+    message: Dynamic eval can execute untrusted Python code. Verify the input trust boundary.
+    pattern: eval(...)
+  - id: python-shell-true
+    languages: [python]
+    severity: WARNING
+    message: A subprocess using shell=True can allow command injection when inputs are untrusted.
+    patterns:
+      - pattern-either:
+          - pattern: subprocess.run(..., shell=True, ...)
+          - pattern: subprocess.Popen(..., shell=True, ...)
+          - pattern: subprocess.call(..., shell=True, ...)

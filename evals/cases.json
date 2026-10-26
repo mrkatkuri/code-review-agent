@@ -1,0 +1,5 @@
+[
+  {"name": "undefined-name", "code": "def greet():\n    return missing_user\n", "expected": [{"source": "ruff", "line": 2, "rule": "F821"}]},
+  {"name": "unsafe-pickle", "code": "import pickle\ndef load(data):\n    return pickle.loads(data)\n", "expected": [{"source": "bandit", "line": 3, "rule": "B301"}]},
+  {"name": "clean-addition", "code": "def add(a: int, b: int) -> int:\n    return a + b\n", "expected": []}
+]

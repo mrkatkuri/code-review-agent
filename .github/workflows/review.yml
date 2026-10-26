@@ -1,0 +1,43 @@
+name: Code review
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --extra dev --extra dashboard --extra scanners --frozen
+      - run: uv run ruff check --isolated .
+      - run: uv run pytest --cov=. --cov-report=json:coverage.json --cov-report=term-missing
+      - run: uv run python evals/run_eval.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-and-evaluation
+          path: |
+            coverage.json
+            eval-results.json
+  review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      # Install the trusted base revision. PR code is downloaded as data by the API;
+      # it is never imported or installed in this job. No pull_request_target event.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --extra scanners --frozen
+      - name: Review changed files
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: uv run code-review-agent --github-pr "$PR_URL" --static-only --scanners radon pylint --no-history --fail-on high
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: code-review-report
+          path: reports/
